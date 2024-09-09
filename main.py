@@ -2,12 +2,12 @@ import logging
 
 from automationserver import AutomationServer, AutomationServerConfig
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import StaleElementReferenceException
 
 from queuefiller import populate_queue
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
@@ -28,7 +28,10 @@ if __name__ == "__main__":
     populate_queue(workqueue)
 
     # Do more initailization here
-    driver = webdriver.Chrome()
+    options = webdriver.ChromeOptions()
+    options.add_argument("--disable-search-engine-choice-screen")
+    driver = webdriver.Chrome(options=options)
+
 
     for item in workqueue:
         with item:
@@ -43,9 +46,13 @@ if __name__ == "__main__":
 
             # Get the count of a tags with href attributes
             links = driver.find_elements(By.TAG_NAME, "a")
-            data["hrefcount"] = len(
-                [link for link in links if link.get_attribute("href")]
-            )
+            try:
+                data["hrefcount"] = len(
+                    [link for link in links if link.get_attribute("href")]
+                )
+            except StaleElementReferenceException:
+                logger.error(f"An error occurred while counting hrefs on: {data['url']}")
+                data["hrefcount"] = -1
 
             # Update the workqueue item
             item.update(data)
