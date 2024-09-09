@@ -5,6 +5,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 
+from queuefiller import populate_queue
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -23,8 +24,11 @@ if __name__ == "__main__":
     logger.info(f"Using {ats}")
     workqueue = ats.workqueue()
 
+    # Populate the workqueue
+    populate_queue(workqueue)
+
     # Do more initailization here
-    driver = webdriver.Safari()
+    driver = webdriver.Chrome()
 
     for item in workqueue:
         with item:

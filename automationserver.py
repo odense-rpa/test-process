@@ -187,7 +187,7 @@ class WorkItem:
         logger = logging.getLogger(__name__)
         if exc_type:
             logger.error(
-                f"An error occurred while processing {self.item}: {exc_value}"
+                f"An error occurred while processing {self}: {exc_value}"
             )
             self.fail(str(exc_value))
 
