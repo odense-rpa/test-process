@@ -11,10 +11,12 @@ class AutomationServerConfig:
     session = ""
     resource = ""
     process = ""
- 
+
+    workitem_id = None
+
     def from_enviroment(fallback_url: str = "", fallback_token: str = ""):
         logger = logging.getLogger(__name__)
-        
+
         if "ATS_URL" not in os.environ or "ATS_TOKEN" not in os.environ:
             AutomationServerConfig.url = fallback_url
             AutomationServerConfig.token = fallback_token
@@ -27,7 +29,38 @@ class AutomationServerConfig:
         AutomationServerConfig.resource = os.environ["ATS_RESOURCE"]    
         AutomationServerConfig.process = os.environ["ATS_PROCESS"]
         
+
         logger.info(f"Using URL {AutomationServerConfig.url} and token {AutomationServerConfig.token}")
+
+    
+
+# Custom HTTP Handler for logging
+class AutomationServerLoggingHandler(logging.Handler):
+    def __init__(self):
+        super().__init__()
+
+    def emit(self, record):
+        print("Sending log")
+        log_entry = self.format(record)  # Format the log record
+        log_data = { "workitem_id": 0, "message": log_entry }
+
+        if AutomationServerConfig.session == "" or AutomationServerConfig.url == "":
+            return
+
+        if AutomationServerConfig.workitem_id is not None:
+            log_data["workitem_id"] = AutomationServerConfig.workitem_id
+
+        try:
+            response = requests.post(
+                f"{AutomationServerConfig.url}/sessions/{AutomationServerConfig.session}/log",
+                headers={"Authorization": f"Bearer {AutomationServerConfig.token}"},
+                json=log_data,
+            )
+            response.raise_for_status()
+        except Exception as e:
+            # Handle any exceptions that occur when sending the log
+            print(f"Failed to send log to {self.url}: {e}")
+
 
 
 class AutomationServer:
@@ -42,7 +75,8 @@ class AutomationServer:
         if session_id is not None:
             self.session = Session.get_session(session_id)
             self.process = Process.get_process(self.session.process_id)
-            self.workqueue_id = self.process.workqueue_id
+            if self.process.workqueue_id > 0:
+                self.workqueue_id = self.process.workqueue_id
         else:
             self.session = None
             self.process = None
@@ -158,6 +192,8 @@ class Workqueue:
 
         response.raise_for_status()
 
+        AutomationServerConfig.workitem_id = response.json()["id"]
+
         return WorkItem(**response.json())
 
 
@@ -173,7 +209,6 @@ class WorkItem:
     created_at: str
     updated_at: str
 
-    current_item = None
 
     def get_data_as_dict(self) -> dict:
         return json.loads(self.data)
@@ -192,10 +227,11 @@ class WorkItem:
     def __enter__(self):
         logger = logging.getLogger(__name__)
         logger.info(f"Processing {self}")
-        self.current_item = self
+        AutomationServerConfig.workitem_id = self.id
 
     def __exit__(self, exc_type, exc_value, traceback):
         logger = logging.getLogger(__name__)
+        AutomationServerConfig.workitem_id = None
         if exc_type:
             logger.error(
                 f"An error occurred while processing {self}: {exc_value}"

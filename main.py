@@ -1,19 +1,19 @@
 import logging
 
-from automationserver import AutomationServer, AutomationServerConfig
+from automationserver import AutomationServer, AutomationServerConfig, AutomationServerLoggingHandler
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import StaleElementReferenceException
 
 from queuefiller import populate_queue
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 if __name__ == "__main__":
     AutomationServerConfig.from_enviroment(
         fallback_url="http://localhost:8000/api", fallback_token=""
     )
+
+    logging.basicConfig(level=logging.INFO,handlers=[AutomationServerLoggingHandler(),logging.StreamHandler()])
+    logger = logging.getLogger(__name__)
 
     ats = AutomationServer.from_environment()
 
