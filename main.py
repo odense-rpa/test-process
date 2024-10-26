@@ -50,13 +50,15 @@ async def main():
                     links = await page.query_selector_all("a")
                     data["hrefcount"] = len([link for link in links if await link.get_attribute("href")])
     
+                    # Update the workqueue item
+                    item.update(data)
+
+                    logger.info(f"Processed {data['url']} with {data['imagecount']} images and {data['hrefcount']} hrefs")
                 except Exception as e:
                     logger.error(f"An error occurred while counting hrefs on: {data['url']} - {e}")
                     data["hrefcount"] = -1
                     item.fail("Failed on error")
 
-                # Update the workqueue item
-                item.update(data)
 
         await browser.close()
 
