@@ -178,6 +178,17 @@ class Workqueue:
 
         return Workqueue(**response.json())
 
+    def clear_workqueue(self, workitem_status=None, days_older_than=None):
+        response = requests.post(
+            f"{AutomationServerConfig.url}/workqueues/{self.id}/clear",
+            json={
+                "workitem_status": workitem_status,
+                "days_older_than": days_older_than,
+            },
+            headers={"Authorization": f"Bearer {AutomationServerConfig.token}"},
+        )
+        response.raise_for_status()
+
     def __iter__(self):
         return self
 
@@ -226,7 +237,7 @@ class WorkItem:
 
     def __enter__(self):
         logger = logging.getLogger(__name__)
-        logger.info(f"Processing {self}")
+        logger.debug(f"Processing {self}")
         AutomationServerConfig.workitem_id = self.id
 
     def __exit__(self, exc_type, exc_value, traceback):

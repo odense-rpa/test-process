@@ -24,6 +24,8 @@ async def main():
     workqueue = ats.workqueue()
 
     # Populate the workqueue
+    workqueue.clear_workqueue("new")
+
     populate_queue(workqueue)
 
     # Start Playwright
@@ -36,20 +38,22 @@ async def main():
             with item:
                 data = item.get_data_as_dict()
 
-                # Open the URL
-                await page.goto(data["url"])
-
-                # Get the count of img tags
-                images = await page.query_selector_all("img")
-                data["imagecount"] = len(images)
-
-                # Get the count of a tags with href attributes
                 try:
+                    # Open the URL
+                    await page.goto(data["url"])
+
+                    # Get the count of img tags
+                    images = await page.query_selector_all("img")
+                    data["imagecount"] = len(images)
+
+                    # Get the count of a tags with href attributes
                     links = await page.query_selector_all("a")
                     data["hrefcount"] = len([link for link in links if await link.get_attribute("href")])
+    
                 except Exception as e:
                     logger.error(f"An error occurred while counting hrefs on: {data['url']} - {e}")
                     data["hrefcount"] = -1
+                    item.fail("Failed on error")
 
                 # Update the workqueue item
                 item.update(data)
