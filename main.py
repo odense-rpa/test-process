@@ -28,6 +28,7 @@ async def main():
     if "--queue" in sys.argv:
         workqueue.clear_workqueue("new")
         populate_queue(workqueue)
+        return
 
     # Start Playwright
     async with async_playwright() as p:
