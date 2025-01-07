@@ -113,6 +113,7 @@ class Session:
     status: str
     stop_requested: bool
     deleted: bool
+    parameters: str
     created_at: str
     updated_at: str
 
