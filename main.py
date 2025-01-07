@@ -1,5 +1,6 @@
 import logging
 import asyncio
+import sys
 
 from automationserver import AutomationServer, AutomationServerConfig, AutomationServerLoggingHandler
 from queuefiller import populate_queue
@@ -23,10 +24,10 @@ async def main():
     logger.info(f"Using {ats}")
     workqueue = ats.workqueue()
 
-    # Populate the workqueue
-    workqueue.clear_workqueue("new")
-
-    populate_queue(workqueue)
+    # Populate the workqueue if we have --queue arg
+    if "--queue" in sys.argv:
+        workqueue.clear_workqueue("new")
+        populate_queue(workqueue)
 
     # Start Playwright
     async with async_playwright() as p:
