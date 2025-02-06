@@ -293,8 +293,9 @@ class Credential:
 
     @staticmethod
     def get_credential(credential: str):
+        
         response = requests.get(
-            f"{AutomationServerConfig.url}/credentials/by_name/{credential}",
+            f"{AutomationServerConfig.url}/credentials/by_name/{requests.utils.quote(credential)}",
             headers={"Authorization": f"Bearer {AutomationServerConfig.token}"},
         )
         response.raise_for_status()
