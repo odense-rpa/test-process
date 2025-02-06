@@ -3,36 +3,36 @@ import requests
 import json
 import logging
 from dataclasses import dataclass
-
+from dotenv import load_dotenv
+from datetime import datetime
 
 class AutomationServerConfig:
     token = ""
     url = ""
-    session = ""
-    resource = ""
-    process = ""
+    session = None
+    resource = None
+    process = None
 
     workitem_id = None
 
-    def from_enviroment(fallback_url: str = "", fallback_token: str = ""):
-        logger = logging.getLogger(__name__)
+    workqueue_override = None
 
-        if "ATS_URL" not in os.environ or "ATS_TOKEN" not in os.environ:
-            AutomationServerConfig.url = fallback_url
-            AutomationServerConfig.token = fallback_token
-            logger.info(f"Using fallback URL {fallback_url} and token {fallback_token}")
-            return
-
-        AutomationServerConfig.url = os.environ["ATS_URL"]
-        AutomationServerConfig.token = os.environ["ATS_TOKEN"]
-        AutomationServerConfig.session = os.environ["ATS_SESSION"]
-        AutomationServerConfig.resource = os.environ["ATS_RESOURCE"]    
-        AutomationServerConfig.process = os.environ["ATS_PROCESS"]
+    @staticmethod
+    def init_from_environment():
+        load_dotenv()
+        
+        AutomationServerConfig.url = os.environ["ATS_URL"] if "ATS_URL" in os.environ else ""
+        AutomationServerConfig.token = os.environ["ATS_TOKEN"] if "ATS_TOKEN" in os.environ else ""
+        AutomationServerConfig.session = os.environ["ATS_SESSION"] if "ATS_SESSION" in os.environ else None
+        AutomationServerConfig.resource = os.environ["ATS_RESOURCE"] if "ATS_RESOURCE" in os.environ else None
+        AutomationServerConfig.process = os.environ["ATS_PROCESS"] if "ATS_PROCESS" in os.environ else None
+        AutomationServerConfig.workqueue_override = os.environ["ATS_WORKQUEUE_OVERRIDE"] if "ATS_WORKQUEUE_OVERRIDE" in os.environ else None
+        
+        
+        if AutomationServerConfig.url == "":
+            raise ValueError("ATS_URL is not set in the environment")        
         
 
-        logger.info(f"Using URL {AutomationServerConfig.url} and token {AutomationServerConfig.token}")
-
-    
 
 # Custom HTTP Handler for logging
 class AutomationServerLoggingHandler(logging.Handler):
@@ -44,7 +44,7 @@ class AutomationServerLoggingHandler(logging.Handler):
         log_entry = self.format(record)  # Format the log record
         log_data = { "workitem_id": 0, "message": log_entry }
 
-        if AutomationServerConfig.session == "" or AutomationServerConfig.url == "":
+        if AutomationServerConfig.session is None or AutomationServerConfig.url == "":
             return
 
         if AutomationServerConfig.workitem_id is not None:
@@ -69,6 +69,7 @@ class AutomationServer:
     def __init__(self, session_id=None):
         session_id = session_id
         self.workqueue_id = None
+
         self.url = AutomationServerConfig.url
         self.token = AutomationServerConfig.token
 
@@ -81,6 +82,8 @@ class AutomationServer:
             self.session = None
             self.process = None
 
+        if AutomationServerConfig.workqueue_override is not None:
+            self.workqueue_id = AutomationServerConfig.workqueue_override
 
     def workqueue(self):
         if self.workqueue_id is None:
@@ -89,19 +92,20 @@ class AutomationServer:
         return Workqueue.get_workqueue(self.workqueue_id)
 
     def from_environment():
-        # Check if ats_url, ats_token and ats_session are set in the environment, if not, return None
-        if "ATS_SESSION" not in os.environ:
-            return None
+        AutomationServerConfig.init_from_environment()
 
-        return AutomationServer(os.environ["ATS_SESSION"])
+        logging.basicConfig(level=logging.INFO, handlers=[AutomationServerLoggingHandler(), logging.StreamHandler()])
 
-    def debug(workqueue_id):
-        ats = AutomationServer(None)
-        ats.workqueue_id = workqueue_id
-        return ats
+        return AutomationServer(AutomationServerConfig.session)
+
 
     def __str__(self):
-        return f"AutomationServer(url={self.url}, token={self.token},session = {self.session}, process = {self.process}, workqueue_id={self.workqueue_id})"
+        return f"AutomationServer(url={self.url}, session = {self.session}, process = {self.process}, workqueue_id={self.workqueue_id})"
+
+class WorkItemError(Exception):
+    pass
+    
+    
 
 
 @dataclass
@@ -270,8 +274,32 @@ class WorkItem:
         response = requests.put(
             f"{AutomationServerConfig.url}/workitems/{self.id}/status",
             headers={"Authorization": f"Bearer {AutomationServerConfig.token}"},
-            json={"status": status, message: message},
+            json={"status": status, "message": message},
         )
         response.raise_for_status()
         self.status = status
         self.message = message
+
+@dataclass
+class Credential:
+    id: int
+    name: str
+    data: str
+    username: str
+    password: str
+    deleted: bool
+    created_at: datetime
+    updated_at: datetime
+
+    @staticmethod
+    def get_credential(credential: str):
+        response = requests.get(
+            f"{AutomationServerConfig.url}/credentials/by_name/{credential}",
+            headers={"Authorization": f"Bearer {AutomationServerConfig.token}"},
+        )
+        response.raise_for_status()
+
+        return Credential(**response.json())
+
+    def get_data_as_dict(self) -> dict:
+        return json.loads(self.data)
