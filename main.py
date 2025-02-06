@@ -65,12 +65,10 @@ async def process_workqueue(workqueue: Workqueue):
                     item.update(data)
 
                     logger.info(f"Processed {data['url']} with {data['imagecount']} images and {data['hrefcount']} hrefs")
-                    
-
                 except Exception as e:
                     logger.error(f"An error occurred while counting hrefs on: {data['url']} - {e}")
                     data["hrefcount"] = -1
-                    item.fail(e)
+                    item.fail(str(e))
 
 
         await browser.close()
