@@ -2,6 +2,8 @@ import logging
 import asyncio
 import logging.config
 import sys
+from random import randint
+from time import sleep
 
 from automationserver import AutomationServer, Workqueue
 from playwright.async_api import async_playwright
@@ -70,6 +72,9 @@ async def process_workqueue(workqueue: Workqueue):
                     data["hrefcount"] = -1
                     item.fail(str(e))
 
+            delay = randint(10, 40)
+            logger.info(f"Sleeping {delay} seconds")
+            sleep(delay)
 
         await browser.close()
 
