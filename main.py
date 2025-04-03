@@ -5,8 +5,9 @@ import sys
 from random import randint
 from time import sleep
 
-from automationserver import AutomationServer, Workqueue
 from playwright.async_api import async_playwright
+
+from automation_server_client import AutomationServer, Workqueue
 
 
 def populate_queue(workqueue: Workqueue):
