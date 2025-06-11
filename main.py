@@ -50,27 +50,26 @@ async def process_workqueue(workqueue: Workqueue):
 
         for item in workqueue:
             with item:
-                data = item.get_data_as_dict()
 
                 try:
                     # Open the URL
-                    await page.goto(data["url"])
+                    await page.goto(item.data["url"])
 
                     # Get the count of img tags
                     images = await page.query_selector_all("img")
-                    data["imagecount"] = len(images)
+                    item.data["imagecount"] = len(images)
 
                     # Get the count of a tags with href attributes
                     links = await page.query_selector_all("a")
-                    data["hrefcount"] = len([link for link in links if await link.get_attribute("href")])
+                    item.data["hrefcount"] = len([link for link in links if await link.get_attribute("href")])
     
                     # Update the workqueue item
-                    item.update(data)
+                    item.update(item.data)
 
-                    logger.info(f"Processed {data['url']} with {data['imagecount']} images and {data['hrefcount']} hrefs")
+                    logger.info(f"Processed {item.data['url']} with {item.data['imagecount']} images and {item.data['hrefcount']} hrefs")
                 except Exception as e:
-                    logger.error(f"An error occurred while counting hrefs on: {data['url']} - {e}")
-                    data["hrefcount"] = -1
+                    logger.error(f"An error occurred while counting hrefs on: {item.data['url']} - {e}")
+                    item.data["hrefcount"] = -1
                     item.fail(str(e))
 
             delay = randint(10, 40)
