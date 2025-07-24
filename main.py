@@ -1,6 +1,5 @@
 import logging
 import asyncio
-import logging.config
 import sys
 from random import randint
 from time import sleep
@@ -80,6 +79,7 @@ async def process_workqueue(workqueue: Workqueue):
 
 # Run the async main function
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     
     ats = AutomationServer.from_environment()    
     
