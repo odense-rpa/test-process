@@ -14,7 +14,7 @@ wheels = [
 [[package]]
 name = "automation-server-client"
 version = "0.2.0"
-source = { git = "https://github.com/odense-rpa/automation-server-client.git?branch=feature%2Flog_improvements#6e4771f29ec35f1651b15aedd3808646db271590" }
+source = { git = "https://github.com/odense-rpa/automation-server-client.git?branch=feature%2Flog_improvements#23bb0621e8712af31295cc37480f6a2e927976b7" }
 dependencies = [
     { name = "pydantic" },
     { name = "python-dotenv" },
