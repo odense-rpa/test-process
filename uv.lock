@@ -14,7 +14,7 @@ wheels = [
 [[package]]
 name = "automation-server-client"
 version = "0.2.0"
-source = { git = "https://github.com/odense-rpa/automation-server-client.git#8c68becf219e39c0507c7fe8875a56aa9698925e" }
+source = { git = "https://github.com/odense-rpa/automation-server-client.git?branch=feature%2Flog_improvements#d768ffcea1052390dfea394db14f53990393cd17" }
 dependencies = [
     { name = "pydantic" },
     { name = "python-dotenv" },
@@ -194,7 +194,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "automation-server-client", git = "https://github.com/odense-rpa/automation-server-client.git" },
+    { name = "automation-server-client", git = "https://github.com/odense-rpa/automation-server-client.git?branch=feature%2Flog_improvements" },
     { name = "playwright", specifier = ">=1.51.0" },
 ]
 
