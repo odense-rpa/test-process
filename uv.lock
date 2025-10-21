@@ -26,8 +26,8 @@ wheels = [
 
 [[package]]
 name = "automation-server-client"
-version = "0.2.1"
-source = { git = "https://github.com/odense-rpa/automation-server-client.git?rev=v0.2.1#b1cfda29d171d65e48f27ac46b1014c6d6096cd8" }
+version = "0.2.0"
+source = { git = "https://github.com/odense-rpa/automation-server-client.git?rev=v0.2.0#0b21f9bd763d6991692dad1cce7793f653322864" }
 dependencies = [
     { name = "httpx" },
     { name = "pydantic" },
@@ -294,7 +294,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "automation-server-client", git = "https://github.com/odense-rpa/automation-server-client.git?rev=v0.2.1" },
+    { name = "automation-server-client", git = "https://github.com/odense-rpa/automation-server-client.git?rev=v0.2.0" },
     { name = "playwright", specifier = "==1.55.0" },
 ]
 
