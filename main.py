@@ -85,6 +85,16 @@ if __name__ == "__main__":
     
     workqueue = ats.workqueue()
 
+    # Fail with a test stack trace if we have --fail arg
+    if "--fail" in sys.argv:
+        def inner_function():
+            raise RuntimeError("Intentional test failure triggered by --fail flag")
+        def middle_function():
+            inner_function()
+        def outer_function():
+            middle_function()
+        outer_function()
+
     # Populate the workqueue if we have --queue arg
     if "--queue" in sys.argv:
         workqueue.clear_workqueue("new")
