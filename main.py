@@ -67,7 +67,8 @@ async def process_workqueue(workqueue: Workqueue):
 
                     logger.info(f"Processed {item.data['url']} with {item.data['imagecount']} images and {item.data['hrefcount']} hrefs")
                 except Exception as e:
-                    logger.error(f"An error occurred while counting hrefs on: {item.data['url']} - {e}")
+                    # item.reference, not item.data["url"]: the url may be the missing key
+                    logger.error(f"An error occurred while counting hrefs on {item.reference}: {e}")
                     item.data["hrefcount"] = -1
                     item.fail(str(e))
 
